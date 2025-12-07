@@ -70,6 +70,7 @@ while True:
   print("c) View Summary")
   print("d) View Transaction History") 
   print("e) Quit")
+  print("f) RESET")
 
   action = input("\nChoose action (a/b/c/d): ").lower().strip()
 
@@ -143,7 +144,8 @@ while True:
             print(f" {category}{dots}{amount_str}")
 
         print("\n" + "=" * 43 + "\n")
-
+        with open("datatest6.json", "w") as f:
+          json.dump(data, f, indent=4)
       elif action == "b": #back to main menu
         break
 
@@ -207,6 +209,8 @@ while True:
               print(f"{'Total Amount Entered':<}{'.' * (width - len('Total Amount Entered') - len(f'{amount_entered:,.2f}'))}{amount_entered:,.2f}")
               print("-" * width)
 
+             
+
               print("Details:")
               for item in exp_receipt:
                   amount = item['amount']
@@ -231,6 +235,9 @@ while True:
 
               data["transactions"].append(expense_record)
 
+              with open("datatest6.json", "w") as f:
+                json.dump(data, f, indent=4)
+
               stop = True
               break
           else:
@@ -238,6 +245,7 @@ while True:
       
         if stop:
           break
+        
 
 # ------------------summary------------------
   elif action == "c": 
@@ -271,6 +279,7 @@ while True:
 
     print("_" * 52)
     print()
+    
  
 # ------------------view history------------------
   elif action == "d":
@@ -307,16 +316,68 @@ while True:
                     dots = "." * (width - len(item['Category']) - len(amt_str)-2)
                     print(f"  {item['Category']:<}{dots}{amt_str}")
                 print()
-            
+
 #---------quit program-----------
   elif action == "e":
-     break
+    with open("datatest6.json", "w") as f:
+      json.dump(data, f, indent=4)
+    break
   
+
+  # f) Clear All Data -> reset to defaults
+  elif action == "f":
+      confirm = input("\n⚠️ This will erase ALL data and restore default settings.\nAre you sure? (y/n): ").lower().strip()
+      if confirm != "y":
+          print("\nReset cancelled.\n")
+          continue   # go back to main menu loop
+
+      # Build a default data structure that matches the program's expected shape
+      # Keep allocations you currently have? If you want to reset allocations, replace this with default allocations.
+      current_allocations = data.get("allocations", {
+          "Investments": 0.40,
+          "Self-Development": 0.30,
+          "Emergency Fund": 0.10,
+          "Travel/Leisure": 0.10,
+          "Home Improvement": 0.10
+      })
+
+      default_data = {
+          "meta": {"created": datetime.now().isoformat()},
+          "acc_bal": {"account_balance": 0.0},
+          "summary": {
+              "total_savings": 0.0,
+              "savings": {k: 0.0 for k in current_allocations.keys()},
+              "total_expenses": 0.0,
+              "expenses": {
+                  "Bills & Utilities": 0.0,
+                  "Food & Groceries": 0.0,
+                  "Transportation": 0.0,
+                  "Debt & Payments": 0.0,
+                  "Health & Medicine": 0.0,
+                  "Shopping": 0.0,
+                  "Family & Gifts": 0.0,
+                  "Insurance": 0.0,
+                  "Rent/Housing": 0.0,
+                  "Education": 0.0
+              }
+          },
+          "transactions": [],
+          "allocations": current_allocations
+      }
+
+      # Save to the same filename your program uses
+      filename = "datatest6.json"
+      with open(filename, "w") as file:
+          json.dump(default_data, file, indent=4)
+
+      # Update in-memory data so the rest of the loop uses the reset state
+      data = default_data
+
+      print("\n✅ All data cleared! Defaults restored.\n")
+
+   
   else:
-     print("Invalid action, Please try again.")
+    print("Invalid action, Please try again.")
             
         
 
-  with open("datatest6.json", "w") as f:
-    json.dump(data, f, indent=4)
-        
