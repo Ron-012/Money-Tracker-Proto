@@ -71,15 +71,15 @@ while True:
   print("d) View Transaction History") 
   print("e) Quit")
 
-  action = input("\nChoose action (a/b/c/d): ").lower()
+  action = input("\nChoose action (a/b/c/d): ").lower().strip()
 
-# ------------------Add to Savings------------------
+# ------------------add to savings------------------
   if action == "a":
     while True:
       print("a) Deposit")
       print("b) Back to main menu")
 
-      action = input("\nChoose action(a/b): ").lower()
+      action = input("\nChoose action(a/b): ").lower().strip()
 
       if action == "a": #calculate allocations and update balances
         entered_amount = valid_amount()
@@ -111,7 +111,7 @@ while True:
 
         transaction_record = {
             "type": "savings",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "amount": entered_amount,
             "total_savings": data["summary"]["total_savings"],
             "Allocations": {
@@ -126,21 +126,23 @@ while True:
         data["transactions"].append(transaction_record)
 
 
-        # ------------------Print Transaction Receipt------------------
+        # ------------------print transaction receipt------------------
         print("\n=========== TRANSACTION RECEIPT ===========")
-        print(f"   ------ {timestamp}------")
-        print(f"\nTotal Savings: {data['summary']['total_savings']:>,.2f}")
-        print("\nSAVINGS", "-" * 34)
-        print(f" Investments: {calc_allocation(entered_amount, data['allocations']['Investments']):,.2f}")
-        print(f" Self-Development: {calc_allocation(entered_amount, data['allocations']['Self-Development']):,.2f}")
-        print(f" Emergency Fund: {calc_allocation(entered_amount, data['allocations']['Emergency Fund']):,.2f}")
-        print(f" Travel/Leisure: {calc_allocation(entered_amount, data['allocations']['Travel/Leisure']):,.2f}")
-        print(f" Home Improvement: {calc_allocation(entered_amount, data['allocations']['Home Improvement']):,.2f}")
-        print() 
+        print(f"   ------ {timestamp} ------\n")
 
-        #------------save data to json file------------
-        # with open("datatest2.json", "w") as f:
-        #   json.dump(data, f)
+        total_savings = data['summary']['total_savings']
+        print(f"Total Savings: {total_savings:,.2f}\n")
+
+        print("ALLOTMENT")
+        width = 40  
+
+        for category, pct in data['allocations'].items():
+            amount = calc_allocation(entered_amount, pct)
+            amount_str = f"{amount:,.2f}"
+            dots = "." * (width - len(category) - len(amount_str))
+            print(f" {category}{dots}{amount_str}")
+
+        print("\n" + "=" * 43 + "\n")
 
       elif action == "b": #back to main menu
         break
@@ -152,7 +154,7 @@ while True:
 
 # ------------------Add to Expenses------------------
   elif action == "b":
-      exp_receipt = [] #append here for multiple seletion
+      exp_receipt = [] #(multiple seletion)
       #--------print selection---------
       while True:
         print("\nSelect Expense Category (1-10):")
@@ -195,40 +197,39 @@ while True:
         #----------print transaction receipt-----------
           elif again == "n": 
               total_expense = 0
-              print("\n=========== EXPENSE RECEIPT ===========")
-              print(f"-------{timestamp}-------")
+              amount_entered = sum(item['amount'] for item in exp_receipt)
+              master_total = data['summary']['total_expenses']
+              width = 40  
+            
+              print("\n========= TRANSACTION RECEIPT ==========")
+              print(f"   ------ {timestamp} ------\n")
+              print(f"{'Master Total Expenses':<}{'.' * (width - len('Master Total Expenses') - len(f'{master_total:,.2f}'))}{master_total:,.2f}")
+              print(f"{'Total Amount Entered':<}{'.' * (width - len('Total Amount Entered') - len(f'{amount_entered:,.2f}'))}{amount_entered:,.2f}")
+              print("-" * width)
+
+              print("Details:")
               for item in exp_receipt:
-                  print(f"{item['Category']}: {item['amount']:,.2f}")
-                  total_expense += item['amount']
-
-              print("\nTotal:", total_expense)
-
-              print("=======================================")
+                  amount = item['amount']
+                  total_expense += amount
+                  amount_str = f"{amount:,.2f}"
+                  category = item['Category']
+                  dots = "." * (width - len(category) - len(amount_str))
+                  print(f"{category}{dots}{amount_str}")
               print()
+              print(f"{'Total':<}{'.' * (width - len('Total') - len(f'{total_expense:,.2f}'))}{total_expense:,.2f}")
+              print("=" * width + "\n")
 
-              #---------------RECORD TRANSACTION------------
+
+              #---------------record transaction------------
               
               expense_record = {
                   "type": "expenses",
-                  "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                  "timestamp": timestamp,
                   "details": exp_receipt,  # list of category/amount dicts
                   "total": sum(item['amount'] for item in exp_receipt)
               }
 
               data["transactions"].append(expense_record)
-
-
-
-
-
-              # expense_record = {
-              #   "type": "expenses",
-              #   "timestamp": timestamp,
-              #   "details": exp_receipt,  # all expense items in this batch
-              #   "total": sum(item['amount'] for item in exp_receipt)
-              #   }
-
-              # data["transactions"].append(expense_record)
 
               stop = True
               break
@@ -237,187 +238,85 @@ while True:
       
         if stop:
           break
-          
-       
 
+# ------------------summary------------------
+  elif action == "c": 
+    width = 52
 
-      
+    print("\n" + "=" * 52)
+    print("\t\t  SUMMARY REPORT")
+    print("=" * 52)
 
-#individual transaction receipt
-#allocation system
+    # ------------------ savings ------------------
+    print("\nSAVINGS")
+    print("-" * 52)
+    print(f"{'Total Savings':<}{'.' * (width - len('Total Savings') - len(f'{data['summary']['total_savings']:,.2f}'))}{data['summary']['total_savings']:,.2f}\n")
 
-# ------------------View Summary Report------------------
-  if action == "c": 
-    print("\nSummary Report") #savings
-    print("SAVINGS")
-    print(f"Investments {data["summary"]["savings"]["Investments"]:.2f}")
+    for category, amount in data['summary']['savings'].items():
+        amount_str = f"{amount:,.2f}"
+        dots = "." * (width - len(category) - len(amount_str))
+        print(f"{category:<}{dots}{amount_str}")
 
-    print(f"Self-Development {data['summary']['savings']['Self-Development']:.2f}")
+    print("_" * 52)
 
-    print(f"Emergency Fund {data['summary']['savings']['Emergency Fund']:.2f}")
-          
-    print(f"Travel/Leisure {data['summary']['savings']['Travel/Leisure']:.2f}")
-  
-    print(f"Home Improvement {data['summary']['savings']['Home Improvement']:.2f}")
-
-    print()
-    print(f"Total Savings: {data['summary']['total_savings']:,.2f}")
-
+    # ------------------ expenses ------------------
     print("\nEXPENSES")
-    print(f"Bills & Utilities: {data["summary"]["expenses"]["Bills & Utilities"]:.2f}")
-    print(f"Food & Groceries: {data["summary"]["expenses"]["Food & Groceries"]}")
-    print(f"Transportation: {data["summary"]["expenses"]["Transportation"]}")
-    print(f"Debt & Payments: {data["summary"]["expenses"]["Debt & Payments"]}")
-    print(f"Health & Medicine: {data["summary"]["expenses"]["Health & Medicine"]}")
-    print(f"Shopping: {data["summary"]["expenses"]["Shopping"]}")
-    print(f"Family & Gifts: {data["summary"]["expenses"]["Family & Gifts"]}")
-    print(f"Insurance: {data["summary"]["expenses"]["Insurance"]}")
-    print(f"Rent/Housing: {data["summary"]["expenses"]["Rent/Housing"]}")
-    print(f"Education: {data["summary"]["expenses"]["Education"]}")
-    
+    print("-" * 52)
+    print(f"{'Total Expenses':<}{'.' * (width - len('Total Expenses') - len(f'{data['summary']['total_expenses']:,.2f}'))}{data['summary']['total_expenses']:,.2f}\n")
 
+    for category, amount in data['summary']['expenses'].items():
+        amount_str = f"{amount:,.2f}"
+        dots = "." * (width - len(category) - len(amount_str))
+        print(f"{category:<}{dots}{amount_str}")
 
-# ------------------View Transaction History------------------
-  if action == "d":
-    print("\nTransaction History")
+    print("_" * 52)
+    print()
+ 
+# ------------------view history------------------
+  elif action == "d":
+    width = 52
+    print("=" * 52)
+    print("\t\t TRANSACTION HISTORY")
+    print("=" * 52)
+
     if not data["transactions"]:
-        print("No transactions yet.")
-    for transaction in data["transactions"]:
-        print("-" * 40)
-        print(f"Type: {transaction['type'].capitalize()}")
-        print(f"Timestamp: {transaction['timestamp']}")
+        print("No transactions yet.\n")
+    else:
+        for transaction in data["transactions"]:
+            print("=" * 52)
+            print(f"Type: {transaction['type'].capitalize()}")
+            print(f"Timestamp: {transaction['timestamp']}\n")
 
-        if transaction["type"] == "savings":
-            print(f"Amount: {transaction['amount']:,.2f}")
-            print("Allocations:")
-            for cat, amt in transaction["Allocations"].items():
-                print(f"  {cat}: {amt:,.2f}")
-        elif transaction["type"] == "expenses":
-            print("Details:")
-            for item in transaction["details"]:
-                print(f"  {item['Category']}: {item['amount']:,.2f}")
-            print(f"Total: {transaction['total']:,.2f}")
+            if transaction["type"] == "savings":
+                amount_str = f"{transaction['amount']:,.2f}"
+                print(f"{'Total Amount Entered':<}{'.' * (width - len('Total Amount Entered') - len(amount_str))}{amount_str}")
+                print("-" * 52)
+                print("Allocations:")
+                for cat, amt in transaction["Allocations"].items():
+                    amt_str = f"{amt:,.2f}"
+                    dots = "." * (width - len(cat) - len(amt_str)-2)
+                    print(f"  {cat:<}{dots}{amt_str}")
 
-     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-     
-      # print("\nTransaction History")
-      # for transaction in data["transactions"]:      
-      #     print("-" * 40)
-      #     print(f"Type: {transaction['type'].capitalize()}")
-      #     print(f"Amount: {transaction['amount']:,.2f}")
-      #     print(f"Timestamp: {transaction['timestamp']}")
-      #     if transaction["type"] == "savings":
-      #         print("Allocations:")
-      #         print(f"  Investments: {transaction['Investments']:,.2f}")
-      #         print(f"  Self-Development: {transaction['Self-Development']:,.2f}")
-      #         print(f"  Emergency Fund: {transaction['Emergency Fund']:,.2f}")
-      #         print(f"  Travel/Leisure: {transaction['Travel/Leisure']:,.2f}")
-      #         print(f"  Home Improvement: {transaction['Home Improvement']:,.2f}")
-      #         print("-" * 40)  
-      #     elif transaction["type"] == "expenses":
-      #       for item in transaction["details"]:
-      #           print(f"{item['Category']}: {item['amount']:,.2f}")
-      #       print(f"Total: {transaction['total']:,.2f}")
-
-
-
-
+            elif transaction["type"] == "expenses":
+                total_str = f"{transaction['total']:,.2f}"
+                print(f"{'Total Amount Entered':<}{'.' * (width - len('Total Amount Entered') - len(total_str))}{total_str}")
+                print("-" *52)
+                print("Details:")
+                for item in transaction["details"]:
+                    amt_str = f"{item['amount']:,.2f}"
+                    dots = "." * (width - len(item['Category']) - len(amt_str)-2)
+                    print(f"  {item['Category']:<}{dots}{amt_str}")
+                print()
+            
 #---------quit program-----------
-  if action == "e":
+  elif action == "e":
      break
+  
+  else:
+     print("Invalid action, Please try again.")
             
         
 
   with open("datatest6.json", "w") as f:
     json.dump(data, f, indent=4)
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # data["summary"]["Categories"]["Investments"] = calc_allocation( 
-        #         data["savings"]["Categories"]["Investments"], 
-        #         entered_amount, 
-        #         data["allocation"]["a_invest"]) 
-        # #selfdev
-        # data["savings"]["Categories"]["Self-Development"] = calc_allocation( 
-        #         data["savings"]["Categories"]["Self-Development"], 
-        #         entered_amount, 
-        #         data["allocation"]["a_selfdev"])
-        # # emerg fund
-        # data["savings"]["Categories"]["Emergency Fund"] = calc_allocation(
-        #         data["savings"]["Categories"]["Emergency Fund"], 
-        #         entered_amount, 
-        #         data["allocation"]["a_emerg"])
-        # #leisure
-        # data["savings"]["Categories"]["Travel/Leisure"] = calc_allocation(
-        #         data["savings"]["Categories"]["Travel/Leisure"], 
-        #         entered_amount, 
-        #         data["allocation"]["a_leisure"])
-        # #home
-        # data["savings"]["Categories"]["Home Improvement"] = calc_allocation(
-        #         data["savings"]["Categories"]["Home Improvement"], 
-        #         entered_amount, 
-        #         data["allocation"]["a_home"])
-
-        # print("\n=========== TRANSACTION RECEIPT ===========")
-        # print(f"   ------ {timestamp}------")
-        # print(f"\nTotal Balance: {data["savings"]["Total Allocated"]:>,.2f}")
-        # print("\nSAVINGS", "-" * 34)
-
-        # for key in data["savings"]["Categories"]: 
-        #   width = 40
-        #   amount = data['savings']["Categories"][key]
-        #   amount_str = f"{amount:,.2f}"
-        #   dots = "." * (width - len(key) - len(amount_str))
-        #   print(f" {key}{dots}{amount_str}")
-
-        # print()
-
-        
-    
-
-  
-
-      
-
-
-        # transaction_record = {
-        #   "type": "savings",
-        #   "amount": entered_amount,
-        #   "timestamp": timestamp,
-        #   "Total Savings": data["summary"]["total_savings"],
-        #   "Investments": calc_allocation(entered_amount, data['allocations']['Investments']),
-        #   "Self-Development": calc_allocation(entered_amount, data['allocations']['Self-Development']),
-        #   "Emergency Fund": calc_allocation(entered_amount, data['allocations']['Emergency Fund']),
-        #   "Travel/Leisure": calc_allocation(entered_amount, data['allocations']['Travel/Leisure']),
-        #   "Home Improvement": calc_allocation(entered_amount, data['allocations']['Home Improvement'])
-        # }
