@@ -324,15 +324,13 @@ while True:
     break
   
 
-  # f) Clear All Data -> reset to defaults
+ #----------clear data---------------
   elif action == "f":
       confirm = input("\n⚠️ This will erase ALL data and restore default settings.\nAre you sure? (y/n): ").lower().strip()
       if confirm != "y":
           print("\nReset cancelled.\n")
-          continue   # go back to main menu loop
+          continue   
 
-      # Build a default data structure that matches the program's expected shape
-      # Keep allocations you currently have? If you want to reset allocations, replace this with default allocations.
       current_allocations = data.get("allocations", {
           "Investments": 0.40,
           "Self-Development": 0.30,
@@ -365,12 +363,12 @@ while True:
           "allocations": current_allocations
       }
 
-      # Save to the same filename your program uses
+
       filename = "datatest6.json"
       with open(filename, "w") as file:
           json.dump(default_data, file, indent=4)
 
-      # Update in-memory data so the rest of the loop uses the reset state
+    
       data = default_data
 
       print("\n✅ All data cleared! Defaults restored.\n")
@@ -380,4 +378,5 @@ while True:
     print("Invalid action, Please try again.")
             
         
+
 
